@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+<meta charset="UTF-8">
+<title>Rockford Hills Police Department</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#0b1e3a;
+color:white;
+}
+
+header{
+display:flex;
+align-items:center;
+gap:15px;
+padding:20px;
+background:#08152b;
+font-size:28px;
+font-weight:bold;
+}
+
+header img{
+height:70px;
+width:auto;
+}
+
+nav{
+text-align:center;
+margin:20px;
+}
+
+button{
+padding:10px 18px;
+margin:5px;
+border:none;
+background:#1f4ea3;
+color:white;
+font-size:15px;
+cursor:pointer;
+border-radius:5px;
+}
+
+button:hover{
+background:#356ad6;
+}
+
+.section{
+display:none;
+padding:20px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+color:black;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+}
+
+th{
+background:#003366;
+color:white;
+}
+
+input,select,textarea{
+padding:6px;
+margin:5px;
+}
+
+#loginBox{
+text-align:center;
+margin-top:150px;
+}
+
+.record{
+background:#102b52;
+padding:10px;
+margin:10px 0;
+border-radius:6px;
+}
+
+.record img{
+max-width:200px;
+display:block;
+margin-top:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<img src="data:image/png;base64,REPLACE_BASE64">
+
+Rockford Hills Police Department
+
+<button onclick="logout()" style="margin-left:auto">Abmelden</button>
+
+</header>
+
+
+<div id="loginBox">
+
+<h2>System Anmeldung</h2>
+
+<input type="text" id="username" placeholder="Benutzername"><br>
+<input type="password" id="password" placeholder="Passwort"><br>
+
+<button onclick="login()">Anmelden</button>
+
+</div>
+
+
+<div id="system" style="display:none">
+
+<nav>
+
+<button onclick="openPage('home')">Startseite</button>
+<button onclick="openPage('personal')">Personalblatt</button>
+<button onclick="openPage('files')">Personalakten</button>
+<button onclick="openPage('training')">Ausbildungskalender</button>
+
+</nav>
+
+
+<div id="home" class="section" style="display:block">
+
+<h2>Willkommen beim RHPD Verwaltungssystem</h2>
+<p>Officer Verwaltung • Personalakten • Ausbildungssystem</p>
+
+</div>
+
+
+<div id="personal" class="section">
+
+<h1>Officer Verwaltung</h1>
+
+<table id="officerTable">
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Dienstgrad</th>
+<th>Unit</th>
+<th>Eintritt</th>
+<th>Letzte Beförderung</th>
+<th>Aktion</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+<h3>Officer hinzufügen</h3>
+
+<input id="name" placeholder="Name">
+
+<select id="rank">
+<option>Rookie</option>
+<option>Officer I</option>
+<option>Officer II</option>
+<option>Officer III</option>
+<option>Sergeant</option>
+<option>Lieutenant</option>
+<option>Captain</option>
+<option>Commander</option>
+<option>Chief of Police</option>
+</select>
+
+<select id="unit">
+<option>Patrol Service</option>
+<option>Special Tactics and Weapons</option>
+<option>Crime Investigation Unit</option>
+</select>
+
+<input type="date" id="entryDate">
+<input type="date" id="promotionDate">
+
+<button onclick="addOfficer()">Officer hinzufügen</button>
+
+</div>
+
+
+<div id="files" class="section">
+
+<h1>Personalakten</h1>
+
+<select id="officerSelect" onchange="loadFile()"></select>
+
+<h3>Neue Aktennotiz</h3>
+
+<textarea id="noteText" placeholder="Kommentar / Abmeldung / Einsatzbericht"></textarea><br>
+
+<input type="file" id="imageUpload"><br>
+
+<button onclick="addRecord()">Eintrag speichern</button>
+
+<h3>Akteneinträge</h3>
+
+<div id="records"></div>
+
+</div>
+
+
+<div id="training" class="section">
+
+<h1>Ausbildungskalender</h1>
+
+<table id="trainingTable">
+
+<thead>
+<tr>
+<th>Datum</th>
+<th>Ausbildung</th>
+<th>Ort</th>
+<th>Ausbilder</th>
+<th>Aktion</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+<h3>Neue Ausbildung</h3>
+
+<input type="date" id="trainingDate">
+
+<input id="trainingName" placeholder="Ausbildung">
+
+<input id="trainingLocation" placeholder="Ort">
+
+<input id="trainer" placeholder="Ausbilder">
+
+<button onclick="addTraining()">Termin hinzufügen</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+function login(){
+
+let user=username.value
+let pass=password.value
+
+if(user==="admin" && pass==="rhpdpd"){
+
+loginBox.style.display="none"
+system.style.display="block"
+
+}else{
+
+alert("Falsche Zugangsdaten")
+
+}
+
+}
+
+function logout(){
+
+location.reload()
+
+}
+
+function openPage(page){
+
+document.querySelectorAll(".section").forEach(s=>s.style.display="none")
+
+document.getElementById(page).style.display="block"
+
+}
+
+
+let officers=JSON.parse(localStorage.getItem("officers"))||[]
+let trainings=JSON.parse(localStorage.getItem("trainings"))||[]
+let files=JSON.parse(localStorage.getItem("files"))||{}
+
+function save(){
+
+localStorage.setItem("officers",JSON.stringify(officers))
+localStorage.setItem("trainings",JSON.stringify(trainings))
+localStorage.setItem("files",JSON.stringify(files))
+
+}
+
+
+function renderOfficers(){
+
+const body=document.querySelector("#officerTable tbody")
+body.innerHTML=""
+
+officers.forEach((o,i)=>{
+
+const row=document.createElement("tr")
+
+row.innerHTML=`
+
+<td>${o.name}</td>
+<td>${o.rank}</td>
+<td>${o.unit}</td>
+<td>${o.entryDate}</td>
+<td>${o.promotionDate}</td>
+
+<td>
+<button onclick="deleteOfficer(${i})">Löschen</button>
+</td>
+`
+
+body.appendChild(row)
+
+})
+
+updateOfficerSelect()
+
+save()
+
+}
+
+
+function updateOfficerSelect(){
+
+const sel=document.getElementById("officerSelect")
+sel.innerHTML=""
+
+officers.forEach(o=>{
+
+const opt=document.createElement("option")
+opt.value=o.name
+opt.textContent=o.name+" - "+o.rank
+sel.appendChild(opt)
+
+})
+
+}
+
+
+function addOfficer(){
+
+officers.push({
+
+name:name.value,
+rank:rank.value,
+unit:unit.value,
+entryDate:entryDate.value,
+promotionDate:promotionDate.value
+
+})
+
+renderOfficers()
+
+}
+
+
+function deleteOfficer(i){
+
+officers.splice(i,1)
+
+renderOfficers()
+
+}
+
+
+function loadFile(){
+
+const officer=officerSelect.value
+
+const box=document.getElementById("records")
+
+box.innerHTML=""
+
+if(!files[officer]) return
+
+files[officer].forEach(r=>{
+
+const div=document.createElement("div")
+div.className="record"
+
+div.innerHTML=`
+
+<div>${r.text}</div>
+${r.img?`<img src="${r.img}">`:""}
+
+`
+
+box.appendChild(div)
+
+})
+
+}
+
+
+function addRecord(){
+
+const officer=officerSelect.value
+const text=noteText.value
+const file=imageUpload.files[0]
+
+if(!files[officer]) files[officer]=[]
+
+if(file){
+
+const reader=new FileReader()
+
+reader.onload=function(){
+
+files[officer].push({text:text,img:reader.result})
+
+save()
+loadFile()
+
+}
+
+reader.readAsDataURL(file)
+
+}else{
+
+files[officer].push({text:text})
+
+save()
+loadFile()
+
+}
+
+noteText.value=""
+imageUpload.value=""
+
+}
+
+
+function renderTrainings(){
+
+const body=document.querySelector("#trainingTable tbody")
+
+body.innerHTML=""
+
+trainings.forEach((t,i)=>{
+
+const row=document.createElement("tr")
+
+row.innerHTML=`
+
+<td>${t.date}</td>
+<td>${t.name}</td>
+<td>${t.location}</td>
+<td>${t.trainer}</td>
+
+<td>
+<button onclick="deleteTraining(${i})">Löschen</button>
+</td>
+
+`
+
+body.appendChild(row)
+
+})
+
+save()
+
+}
+
+
+function addTraining(){
+
+trainings.push({
+
+date:trainingDate.value,
+name:trainingName.value,
+location:trainingLocation.value,
+trainer:trainer.value
+
+})
+
+renderTrainings()
+
+}
+
+
+function deleteTraining(i){
+
+trainings.splice(i,1)
+
+renderTrainings()
+
+}
+
+
+renderOfficers()
+renderTrainings()
+
+</script>
+
+</body>
+</html>
