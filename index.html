@@ -1,7 +1,7 @@
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <title>Rockford Hills Police Department</title>
 
@@ -20,13 +20,12 @@ align-items:center;
 gap:15px;
 padding:20px;
 background:#08152b;
-font-size:28px;
+font-size:26px;
 font-weight:bold;
 }
 
 header img{
 height:70px;
-width:auto;
 }
 
 nav{
@@ -90,26 +89,46 @@ border-radius:6px;
 
 .record img{
 max-width:200px;
-display:block;
 margin-top:5px;
 }
 
-</style>
+/* Kalender */
 
+#calendar td{
+height:90px;
+vertical-align:top;
+background:white;
+color:black;
+font-size:12px;
+}
+
+.dayNumber{
+font-weight:bold;
+}
+
+.trainingEvent{
+background:#1f4ea3;
+color:white;
+padding:2px;
+margin-top:3px;
+border-radius:3px;
+font-size:11px;
+}
+
+</style>
 </head>
 
 <body>
 
 <header>
 
-<img src="data:image/png;base64,REPLACE_BASE64">
+<img src="/mnt/data/Screenshot 2026-03-07 002654.png">
 
 Rockford Hills Police Department
 
 <button onclick="logout()" style="margin-left:auto">Abmelden</button>
 
 </header>
-
 
 <div id="loginBox">
 
@@ -122,7 +141,6 @@ Rockford Hills Police Department
 
 </div>
 
-
 <div id="system" style="display:none">
 
 <nav>
@@ -134,6 +152,7 @@ Rockford Hills Police Department
 
 </nav>
 
+<!-- STARTSEITE -->
 
 <div id="home" class="section" style="display:block">
 
@@ -142,6 +161,7 @@ Rockford Hills Police Department
 
 </div>
 
+<!-- PERSONALBLATT -->
 
 <div id="personal" class="section">
 
@@ -193,6 +213,7 @@ Rockford Hills Police Department
 
 </div>
 
+<!-- PERSONALAKTEN -->
 
 <div id="files" class="section">
 
@@ -200,7 +221,7 @@ Rockford Hills Police Department
 
 <select id="officerSelect" onchange="loadFile()"></select>
 
-<h3>Neue Aktennotiz</h3>
+<h3>Neuer Eintrag</h3>
 
 <textarea id="noteText" placeholder="Kommentar / Abmeldung / Einsatzbericht"></textarea><br>
 
@@ -214,20 +235,33 @@ Rockford Hills Police Department
 
 </div>
 
+<!-- AUSBILDUNGSKALENDER -->
 
 <div id="training" class="section">
 
 <h1>Ausbildungskalender</h1>
 
-<table id="trainingTable">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:15px">
+
+<button onclick="prevMonth()">◀</button>
+
+<h2 id="calendarTitle"></h2>
+
+<button onclick="nextMonth()">▶</button>
+
+</div>
+
+<table id="calendar">
 
 <thead>
 <tr>
-<th>Datum</th>
-<th>Ausbildung</th>
-<th>Ort</th>
-<th>Ausbilder</th>
-<th>Aktion</th>
+<th>Mo</th>
+<th>Di</th>
+<th>Mi</th>
+<th>Do</th>
+<th>Fr</th>
+<th>Sa</th>
+<th>So</th>
 </tr>
 </thead>
 
@@ -239,10 +273,20 @@ Rockford Hills Police Department
 
 <input type="date" id="trainingDate">
 
-<input id="trainingName" placeholder="Ausbildung">
+<select id="trainingName">
+
+<option>GAB 01</option>
+<option>GAB 02</option>
+<option>Aktenschulung</option>
+<option>Beweissicherung</option>
+<option>Leitstellenausbildung</option>
+<option>Einsatzleitung</option>
+<option>Verhandlungsführung</option>
+<option>Overwatch</option>
+
+</select>
 
 <input id="trainingLocation" placeholder="Ort">
-
 <input id="trainer" placeholder="Ausbilder">
 
 <button onclick="addTraining()">Termin hinzufügen</button>
@@ -251,54 +295,37 @@ Rockford Hills Police Department
 
 </div>
 
-
 <script>
 
 function login(){
-
-let user=username.value
-let pass=password.value
-
-if(user==="admin" && pass==="rhpdpd"){
-
+if(username.value==="admin" && password.value==="rhpdpd"){
 loginBox.style.display="none"
 system.style.display="block"
-
 }else{
-
 alert("Falsche Zugangsdaten")
-
 }
-
 }
 
 function logout(){
-
 location.reload()
-
 }
 
 function openPage(page){
-
 document.querySelectorAll(".section").forEach(s=>s.style.display="none")
-
 document.getElementById(page).style.display="block"
-
 }
-
 
 let officers=JSON.parse(localStorage.getItem("officers"))||[]
 let trainings=JSON.parse(localStorage.getItem("trainings"))||[]
 let files=JSON.parse(localStorage.getItem("files"))||{}
 
 function save(){
-
 localStorage.setItem("officers",JSON.stringify(officers))
 localStorage.setItem("trainings",JSON.stringify(trainings))
 localStorage.setItem("files",JSON.stringify(files))
-
 }
 
+/* OFFICERS */
 
 function renderOfficers(){
 
@@ -320,6 +347,7 @@ row.innerHTML=`
 <td>
 <button onclick="deleteOfficer(${i})">Löschen</button>
 </td>
+
 `
 
 body.appendChild(row)
@@ -332,7 +360,6 @@ save()
 
 }
 
-
 function updateOfficerSelect(){
 
 const sel=document.getElementById("officerSelect")
@@ -343,43 +370,37 @@ officers.forEach(o=>{
 const opt=document.createElement("option")
 opt.value=o.name
 opt.textContent=o.name+" - "+o.rank
+
 sel.appendChild(opt)
 
 })
 
 }
 
-
 function addOfficer(){
 
 officers.push({
-
 name:name.value,
 rank:rank.value,
 unit:unit.value,
 entryDate:entryDate.value,
 promotionDate:promotionDate.value
-
 })
 
 renderOfficers()
 
 }
 
-
 function deleteOfficer(i){
-
 officers.splice(i,1)
-
 renderOfficers()
-
 }
 
+/* PERSONALAKTEN */
 
 function loadFile(){
 
 const officer=officerSelect.value
-
 const box=document.getElementById("records")
 
 box.innerHTML=""
@@ -391,19 +412,13 @@ files[officer].forEach(r=>{
 const div=document.createElement("div")
 div.className="record"
 
-div.innerHTML=`
-
-<div>${r.text}</div>
-${r.img?`<img src="${r.img}">`:""}
-
-`
+div.innerHTML=`<div>${r.text}</div>${r.img?`<img src="${r.img}">`:""}`
 
 box.appendChild(div)
 
 })
 
 }
-
 
 function addRecord(){
 
@@ -442,68 +457,97 @@ imageUpload.value=""
 
 }
 
+/* KALENDER */
 
-function renderTrainings(){
+let currentMonth=new Date().getMonth()
+let currentYear=new Date().getFullYear()
 
-const body=document.querySelector("#trainingTable tbody")
+function renderCalendar(){
 
+const body=document.querySelector("#calendar tbody")
 body.innerHTML=""
 
-trainings.forEach((t,i)=>{
+const title=document.getElementById("calendarTitle")
 
-const row=document.createElement("tr")
+const date=new Date(currentYear,currentMonth)
 
-row.innerHTML=`
+title.innerText=date.toLocaleString("de-DE",{month:"long",year:"numeric"})
 
-<td>${t.date}</td>
-<td>${t.name}</td>
-<td>${t.location}</td>
-<td>${t.trainer}</td>
+const firstDay=(new Date(currentYear,currentMonth,1).getDay()+6)%7
+const days=new Date(currentYear,currentMonth+1,0).getDate()
 
-<td>
-<button onclick="deleteTraining(${i})">Löschen</button>
-</td>
+let row=document.createElement("tr")
 
-`
+for(let i=0;i<firstDay;i++){
+row.appendChild(document.createElement("td"))
+}
 
+for(let day=1;day<=days;day++){
+
+if(row.children.length===7){
 body.appendChild(row)
+row=document.createElement("tr")
+}
 
-})
+const cell=document.createElement("td")
 
-save()
+cell.innerHTML=`<div class="dayNumber">${day}</div>`
+
+const dateStr=currentYear+"-"+String(currentMonth+1).padStart(2,"0")+"-"+String(day).padStart(2,"0")
+
+trainings.forEach(t=>{
+
+if(t.date===dateStr){
+
+const div=document.createElement("div")
+div.className="trainingEvent"
+div.innerText=t.name
+
+cell.appendChild(div)
 
 }
 
+})
+
+row.appendChild(cell)
+
+}
+
+body.appendChild(row)
+
+}
+
+function prevMonth(){
+currentMonth--
+if(currentMonth<0){currentMonth=11;currentYear--}
+renderCalendar()
+}
+
+function nextMonth(){
+currentMonth++
+if(currentMonth>11){currentMonth=0;currentYear++}
+renderCalendar()
+}
 
 function addTraining(){
 
 trainings.push({
-
 date:trainingDate.value,
 name:trainingName.value,
 location:trainingLocation.value,
 trainer:trainer.value
-
 })
 
-renderTrainings()
+save()
+renderCalendar()
 
 }
-
-
-function deleteTraining(i){
-
-trainings.splice(i,1)
-
-renderTrainings()
-
-}
-
 
 renderOfficers()
-renderTrainings()
+renderCalendar()
 
 </script>
 
 </body>
 </html>
+```
